@@ -1,0 +1,41 @@
+---
+Language: Cpp
+Standard: c++20
+BasedOnStyle: LLVM
+
+UseTab: Always
+TabWidth: 4
+IndentWidth: 4
+ColumnLimit: 120
+
+AccessModifierOffset: -4
+
+NamespaceIndentation: All
+
+# Wrapping
+BreakBeforeBraces: Allman
+BreakTemplateDeclarations: true
+
+# Functions and methods
+Cpp11BracedListStyle: true
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+BinPackParameters: OnePerLine
+
+# Lambdas
+AllowShortLambdasOnASingleLine: Empty
+
+# Constructors
+BreakConstructorInitializers: BeforeComma
+
+# Math
+AlignOperands: AlignAfterOperator
+BreakBeforeBinaryOperators: true
+BreakBeforeTernaryOperators: true
+
+# Other
+SortIncludes: true
+PointerAlignment: Left
+
+InsertNewlineAtEOF: true
+...
