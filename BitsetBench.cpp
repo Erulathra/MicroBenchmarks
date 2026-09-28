@@ -31,14 +31,13 @@ i32 main()
 
 	u64 seed = QueryPerfCounter();
 
-	printf("Starting benchmark \n");
-
 	Arena arena = Arena::Create(malloc(arenaSize), arenaSize);
+
+	printf("Percentage Enabled, Sequential Object, Sequential Bitset, Sequential Soted Indexes, Sequential Shuffled Indexes, ");
+	printf("Shuffled Object, Shuffled Bitset, Shuffled Soted Indexes, Shuffled Shuffled Indexes \n");
 
 	for (u32 enabledFlags = 1; enabledFlags < 64; ++enabledFlags)
 	{
-		printf("Starting test, enabled flags: %f [%i/%i] \n", 1.f / (float)enabledFlags, enabledFlags, 64);
-
 		u64 sequentialTicsSum = 0;
 		u64 sequentialBitsetTicsSum = 0;
 		u64 sequentialIndexSortedArray = 0;
@@ -212,30 +211,18 @@ i32 main()
 
 		const double sequential = (double)sequentialTicsSum / numTests;
 		const double sequentialBits = (double)sequentialBitsetTicsSum / numTests;
-		const double sequentialBitsRelative = (sequentialBits - sequential) / sequential;
 		const double sequentialSortedIndex = (double)sequentialIndexSortedArray / numTests;
-		const double sequentialSortedIndexRelative = (sequentialSortedIndex - sequential) / sequential;
 		const double sequentialShuffledIndex = (double)sequentialIndexShuffledArray / numTests;
-		const double sequentialShuffledIndexRelative = (sequentialShuffledIndex - sequential) / sequential;
 
 		const double shuffled = (double)shuffledTicsSum / numTests;
 		const double shuffledBits = (double)shuffledBitsetTicsSum / numTests;
-		const double shuffledRelative = (shuffledBits - shuffled) / shuffled;
 		const double shuffledSortedIndex = (double)shuffledIndexSortedArray / numTests;
-		const double shuffledSortedIndexRelative = (shuffledSortedIndex - shuffled) / shuffled;
 		const double shuffledShuffledIndex = (double)shuffledIndexShuffledArray / numTests;
-		const double shuffledShuffledIndexRelative = (shuffledShuffledIndex - shuffled) / shuffled;
 
-		printf("Sequential Data \n");
-		printf("Iterating Object: %f \n", sequential);
-		printf("Iterating Bitset: %f (%f%%) \n", sequentialBits, sequentialBitsRelative * 100.f);
-		printf("Iterating Sorted Index Array: %f (%f%%) \n", sequentialSortedIndex, sequentialSortedIndexRelative * 100.f);
-		printf("Iterating Shuffled Index Array: %f (%f%%) \n", sequentialShuffledIndex, sequentialShuffledIndexRelative * 100.f);
-		printf("Shuffled Data \n");
-		printf("Iterating Object: %f \n", shuffled);
-		printf("Iterating Bitset: %f (%f%%) \n", shuffledBits, shuffledRelative * 100.f);
-		printf("Iterating Sorted Index Array: %f (%f%%) \n", shuffledSortedIndex, shuffledSortedIndexRelative * 100.f);
-		printf("Iterating Shuffled Index Array: %f (%f%%) \n", shuffledShuffledIndex, shuffledShuffledIndexRelative * 100.f);
+		printf("%f, ", (1.f / (float)enabledFlags));
+		printf("%f, %f, %f, %f,", sequential, sequentialBits, sequentialSortedIndex, sequentialShuffledIndex);
+		printf("%f, %f, %f, %f,", shuffled, shuffledBits, shuffledSortedIndex, shuffledShuffledIndex);
+		printf("\n");
 	}
 
 	return 0;
