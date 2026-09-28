@@ -4,6 +4,11 @@
 #include "Common/BitArray.h"
 #include "Common/Common.h"
 
+#define SUBTRACT_COMPUTE_WORK_TIME 0
+#define dataSetSize (1 << 16)
+#define numTests 256
+#define arenaSize (2 * kGibi)
+
 // NOTE(SS): Some thing, designed to be larger than cache line.
 struct Thing
 {
@@ -14,27 +19,29 @@ struct Thing
 	bool bFlag;
 };
 
-inline void DoSomeFancyWork(Thing& element)
+inline void DoSomeFancyWork(Thing& element, u64& computeWorkTime)
 {
+   const u64 timeStart = QueryPerfCounter();
 	const float random = Hash64ToFloat(SplitMix64(element.id));
 	for (u32 i = 0; i < Thing::numFloats - 1; ++i)
 	{
-		element.data[i] = sin(element.data[i + 1]) + sqrt(random);
+		element.data[i] = element.data[i + 1] + random;
 	}
+	const u64 timeEnd = QueryPerfCounter();
+
+#if SUBTRACT_COMPUTE_WORK_TIME
+	computeWorkTime += timeEnd - timeStart;
+#endif // subtractComputeWorkTime
 }
 
 i32 main()
 {
-	constexpr u32 dataSetSize = 1 << 16;
-	constexpr u32 numTests = 256;
-	constexpr u64 arenaSize = 2 * kGibi;
-
 	u64 seed = QueryPerfCounter();
 
 	Arena arena = Arena::Create(malloc(arenaSize), arenaSize);
 
-	printf("Percentage Enabled, Sequential Object, Sequential Bitset, Sequential Soted Indexes, Sequential Shuffled Indexes, ");
-	printf("Shuffled Object, Shuffled Bitset, Shuffled Soted Indexes, Shuffled Shuffled Indexes \n");
+	// printf("Percentage Enabled, Sequential Object, Sequential Bitset, Sequential Soted Indexes, Sequential Shuffled Indexes, ");
+	// printf("Shuffled Object, Shuffled Bitset, Shuffled Soted Indexes, Shuffled Shuffled Indexes \n");
 
 	for (u32 enabledFlags = 1; enabledFlags < 64; ++enabledFlags)
 	{
@@ -108,102 +115,110 @@ i32 main()
 
 			/* Sequential reading object flag */
 			{
+			   u64 workTime = 0;
 				const u64 timeStart = QueryPerfCounter();
 				for (u32 i = 0; i < dataSetSize; ++i)
 				{
 					Thing& element = sequentialData[i];
 					if (element.bFlag)
 					{
-						DoSomeFancyWork(element);
+						DoSomeFancyWork(element, workTime);
 					}
 				}
 				const u64 timeEnd = QueryPerfCounter();
-				sequentialTicsSum += timeEnd - timeStart;
+				sequentialTicsSum += timeEnd - timeStart - workTime;
 			}
 
 			/* Sequential bitset */
 			{
+            u64 workTime = 0;
 				const u64 timeStart = QueryPerfCounter();
 				flags.IterateOverEnabledBits(
 					[&](u32 index)
 					{
-						DoSomeFancyWork(sequentialData[index]);
+						DoSomeFancyWork(sequentialData[index], workTime);
 					}
 				);
 				const u64 timeEnd = QueryPerfCounter();
-				sequentialBitsetTicsSum += timeEnd - timeStart;
+				sequentialBitsetTicsSum += timeEnd - timeStart - workTime;
 			}
 
 			/* Sequential index sorted array */
 			{
+   			u64 workTime = 0;
 				const u64 timeStart = QueryPerfCounter();
 				for (u32 i = 0; i < indexArraySize; ++i)
 				{
-				   DoSomeFancyWork(sequentialData[sortedIndexArray[i]]);
+				   DoSomeFancyWork(sequentialData[sortedIndexArray[i]], workTime);
 				}
 				const u64 timeEnd = QueryPerfCounter();
-				sequentialIndexSortedArray += timeEnd - timeStart;
+				sequentialIndexSortedArray += timeEnd - timeStart - workTime;
 			}
 
 			/* Sequential index shuffled array */
 			{
+   			u64 workTime = 0;
 				const u64 timeStart = QueryPerfCounter();
 				for (u32 i = 0; i < indexArraySize; ++i)
 				{
-				   DoSomeFancyWork(sequentialData[shuffledIndexArray[i]]);
+				   DoSomeFancyWork(sequentialData[shuffledIndexArray[i]], workTime);
 				}
 				const u64 timeEnd = QueryPerfCounter();
-				sequentialIndexShuffledArray += timeEnd - timeStart;
+				sequentialIndexShuffledArray += timeEnd - timeStart - workTime;
 			}
 
 			/* random reading flag */
 			{
-				u64 timeStart = QueryPerfCounter();
+   			u64 workTime = 0;
+				const u64 timeStart = QueryPerfCounter();
 				for (u32 i = 0; i < dataSetSize; ++i)
 				{
 					Thing& element = *shuffledData[i];
 					if (element.bFlag)
 					{
-						DoSomeFancyWork(element);
+						DoSomeFancyWork(element, workTime);
 					}
 				}
-				u64 timeEnd = QueryPerfCounter();
-				shuffledTicsSum += timeEnd - timeStart;
+				const u64 timeEnd = QueryPerfCounter();
+				shuffledTicsSum += timeEnd - timeStart - workTime;
 			}
 
 			/* random bitset */
 			{
-				u64 timeStart = QueryPerfCounter();
+   			u64 workTime = 0;
+				const u64 timeStart = QueryPerfCounter();
 				flags.IterateOverEnabledBits(
 					[&](u32 index)
 					{
-						DoSomeFancyWork(*shuffledData[index]);
+						DoSomeFancyWork(*shuffledData[index], workTime);
 					}
 				);
-				u64 timeEnd = QueryPerfCounter();
-				shuffledBitsetTicsSum += timeEnd - timeStart;
+				const u64 timeEnd = QueryPerfCounter();
+				shuffledBitsetTicsSum += timeEnd - timeStart - workTime;
 			}
 
 			/* random index sorted array */
 			{
+   			u64 workTime = 0;
 				const u64 timeStart = QueryPerfCounter();
 				for (u32 i = 0; i < indexArraySize; ++i)
 				{
-					DoSomeFancyWork(*shuffledData[sortedIndexArray[i]]);
+					DoSomeFancyWork(*shuffledData[sortedIndexArray[i]], workTime);
 				}
 				const u64 timeEnd = QueryPerfCounter();
-				shuffledIndexSortedArray += timeEnd - timeStart;
+				shuffledIndexSortedArray += timeEnd - timeStart - workTime;
 			}
 
 			/* random index shuffled array */
 			{
+   			u64 workTime = 0;
 				const u64 timeStart = QueryPerfCounter();
 				for (u32 i = 0; i < indexArraySize; ++i)
 				{
-					DoSomeFancyWork(*shuffledData[shuffledIndexArray[i]]);
+					DoSomeFancyWork(*shuffledData[shuffledIndexArray[i]], workTime);
 				}
 				const u64 timeEnd = QueryPerfCounter();
-				shuffledIndexShuffledArray += timeEnd - timeStart;
+				shuffledIndexShuffledArray += timeEnd - timeStart - workTime;
 			}
 
 			arena.Clear();
