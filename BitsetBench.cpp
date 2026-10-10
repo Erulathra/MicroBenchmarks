@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include "Common/Arena.h"
 #include "Common/BitArray.h"
 #include "Common/Common.h"
@@ -37,7 +35,6 @@ inline void DoSomeFancyWork(Thing& element, u64& computeWorkTime)
 i32 main()
 {
 	u64 seed = QueryPerfCounter();
-
 	Arena arena = Arena::Create(malloc(arenaSize), arenaSize);
 
 	// printf("Percentage Enabled, Sequential Object, Sequential Bitset, Sequential Soted Indexes, Sequential Shuffled Indexes, ");

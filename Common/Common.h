@@ -49,7 +49,7 @@ using CString = const char*;
 #define CHECK(CONDITION)                                                                                               \
 	if (!(CONDITION)) [[unlikely]]                                                                                     \
 	{                                                                                                                  \
-		fprintf(stderr, "Assertion `" #CONDITION "` failed.\n");                                                                  \
+		fprintf(stderr, "[%s:%d] Assertion `" #CONDITION "` failed.\n", __FILE__, __LINE__);                                                                  \
 		abort();                                                                                                       \
 	}
 
@@ -80,6 +80,18 @@ inline void Memcpy(void* dst, const void* src, u64 numBytes) { memcpy(dst, src, 
 // ##################################################################################
 //                                        Math
 // ##################################################################################
+
+template<typename T>
+T Max(T a, T b)
+{
+	return a > b ? a : b;
+}
+
+template<typename T>
+T Min(T a, T b)
+{
+	return a < b ? a : b;
+}
 
 template <typename DstT, typename SrcT>
 DstT SafeTrunc(SrcT x)
