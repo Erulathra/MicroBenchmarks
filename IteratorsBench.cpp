@@ -20,6 +20,7 @@ i32 main()
 
 	u64 ortodoxTics = 0;
 	u64 forEachArrayTics = 0;
+	u64 forEachFuncArrayTics = 0;
 	u64 iteratorArrayTics = 0;
 	u64 rangeArrayTics = 0;
 
@@ -38,124 +39,145 @@ i32 main()
 		/* Randomize data */
 		TStaticStack<u32, dataSetSize> randomNumbers;
 		TStaticStack<u32, dataSetSize> baseIndexes;
-		for (u32 i = 0; i < dataSetSize; ++i)
+
 		{
-			seed = SplitMix64(seed);
-			if (seed % 4 == 0)
+			for (u32 i = 0; i < dataSetSize; ++i)
 			{
-				bitArray.Set(i, true);
-				baseIndexes.Push(i);
-			}
-
-			randomNumbers.Push(seed % 1024);
-		}
-
-		/* For Each template */
-		TStaticStack<u32, dataSetSize> forEachResult;
-		{
-			const u64 start = QueryPerfCounter();
-			bitArray.IterateOverEnabledBits(
-				[&](u32 index)
+				seed = SplitMix64(seed);
+				if (seed % 4 == 0)
 				{
-					forEachResult.Push(index);
+					bitArray.Set(i, true);
+					baseIndexes.Push(i);
 				}
-			);
-			const u64 end = QueryPerfCounter();
-			forEachBitsetTics += end - start;
-		}
 
-		/* Range based loop */
-		TStaticStack<u32, dataSetSize> rangeResult;
-		{
-			const u64 start = QueryPerfCounter();
-			for (auto index : EnabledBitsRange(bitArray))
-			{
-				rangeResult.Push(index);
+				randomNumbers.Push(seed % 1024);
 			}
-			const u64 end = QueryPerfCounter();
-			rangeBitsetTics += end - start;
-		}
 
-		/* Iterator */
-		TStaticStack<u32, dataSetSize> iteratorResult;
-		{
-			const u64 start = QueryPerfCounter();
-			for (EnabledBitsIterator it(bitArray); it; ++it)
+			/* For Each template */
+			TStaticStack<u32, dataSetSize> forEachResult;
 			{
-				iteratorResult.Push(*it);
+				const u64 start = QueryPerfCounter();
+				bitArray.IterateOverEnabledBits(
+					[&](u32 index)
+					{
+						forEachResult.Push(index);
+					}
+				);
+				const u64 end = QueryPerfCounter();
+				forEachBitsetTics += end - start;
 			}
-			const u64 end = QueryPerfCounter();
-			iteratorBitsetTics += end - start;
-		}
 
-		/* Results Validation */
-		CHECK(baseIndexes.mSize == forEachResult.mSize
-		   && baseIndexes.mSize == iteratorResult.mSize
-		   && baseIndexes.mSize == rangeResult.mSize)
-
-		for(u32 i = 0; i < baseIndexes.mSize; ++i)
-		{
-			CHECK(baseIndexes[i] == forEachResult[i]
-			   && baseIndexes[i] == iteratorResult[i]
-			   && baseIndexes[i] == rangeResult[i])
-		}
-
-		/* Ortodox iteration */
-		u32 ortodoxSum = 0;
-		{
-			const u64 start = QueryPerfCounter();
-			for (u32 i = 0; i < randomNumbers.mSize; ++i)
+			/* Range based loop */
+			TStaticStack<u32, dataSetSize> rangeResult;
 			{
-				ortodoxSum += randomNumbers[i];
-			}
-			const u64 end = QueryPerfCounter();
-			ortodoxTics += end - start;
-		}
-
-		/* For Each template */
-		u32 forEachSum = 0;
-		{
-			const u64 start = QueryPerfCounter();
-			randomNumbers.ForEach(
-				[&forEachSum](u32& data)
+				const u64 start = QueryPerfCounter();
+				for (auto index : EnabledBitsRange(bitArray))
 				{
-					forEachSum += data;
+					rangeResult.Push(index);
 				}
-			);
-			const u64 end = QueryPerfCounter();
-			forEachArrayTics += end - start;
-		}
-
-		/* Iterator */
-		u32 iteratorSum = 0;
-		{
-			const u64 start = QueryPerfCounter();
-			for (auto It = randomNumbers.begin(); It != randomNumbers.end(); ++It)
-			{
-				iteratorSum += *It;
+				const u64 end = QueryPerfCounter();
+				rangeBitsetTics += end - start;
 			}
-			const u64 end = QueryPerfCounter();
-			iteratorArrayTics += end - start;
-		}
 
-		/* Range based loop */
-		u32 rangeSum = 0;
-		{
-			const u64 start = QueryPerfCounter();
-			for (const u32 data : randomNumbers)
+			/* Iterator */
+			TStaticStack<u32, dataSetSize> iteratorResult;
 			{
-				rangeSum += data;
+				const u64 start = QueryPerfCounter();
+				for (EnabledBitsIterator it(bitArray); it; ++it)
+				{
+					iteratorResult.Push(*it);
+				}
+				const u64 end = QueryPerfCounter();
+				iteratorBitsetTics += end - start;
 			}
-			const u64 end = QueryPerfCounter();
-			rangeArrayTics += end - start;
+
+			/* Results Validation */
+			CHECK(
+				baseIndexes.mSize == forEachResult.mSize && baseIndexes.mSize == iteratorResult.mSize
+				&& baseIndexes.mSize == rangeResult.mSize
+			)
+
+			for (u32 i = 0; i < baseIndexes.mSize; ++i)
+			{
+				CHECK(
+					baseIndexes[i] == forEachResult[i] && baseIndexes[i] == iteratorResult[i]
+					&& baseIndexes[i] == rangeResult[i]
+				)
+			}
 		}
 
-		CHECK(ortodoxSum == forEachSum && forEachSum == iteratorSum && iteratorSum == rangeSum)
+		{
+			/* Ortodox iteration */
+			u32 ortodoxSum = 0;
+			{
+				const u64 start = QueryPerfCounter();
+				for (u32 i = 0; i < randomNumbers.mSize; ++i)
+				{
+					ortodoxSum += randomNumbers[i];
+				}
+				const u64 end = QueryPerfCounter();
+				ortodoxTics += end - start;
+			}
+
+			/* For Each template */
+			u32 forEachSum = 0;
+			{
+				const u64 start = QueryPerfCounter();
+				randomNumbers.ForEach(
+					[&forEachSum](u32& data)
+					{
+						forEachSum += data;
+					}
+				);
+				const u64 end = QueryPerfCounter();
+				forEachArrayTics += end - start;
+			}
+
+			/* For Each func */
+			u32 forEachFuncSum = 0;
+			{
+				const u64 start = QueryPerfCounter();
+				randomNumbers.ForEachFunc(
+					[&forEachFuncSum](u32& data)
+					{
+						forEachFuncSum += data;
+					}
+				);
+				const u64 end = QueryPerfCounter();
+				forEachFuncArrayTics += end - start;
+			}
+
+			/* Iterator */
+			u32 iteratorSum = 0;
+			{
+				const u64 start = QueryPerfCounter();
+				for (auto It = randomNumbers.begin(); It != randomNumbers.end(); ++It)
+				{
+					iteratorSum += *It;
+				}
+				const u64 end = QueryPerfCounter();
+				iteratorArrayTics += end - start;
+			}
+
+			/* Range based loop */
+			u32 rangeSum = 0;
+			{
+				const u64 start = QueryPerfCounter();
+				for (const u32 data : randomNumbers)
+				{
+					rangeSum += data;
+				}
+				const u64 end = QueryPerfCounter();
+				rangeArrayTics += end - start;
+			}
+
+			CHECK(ortodoxSum == forEachSum && forEachSum == forEachFuncSum && forEachFuncSum == iteratorSum && iteratorSum == rangeSum)
+		}
 	}
 
-	const double avgTimeForEach  = (double)forEachBitsetTics / (double)numTests;
-	const double avgTimeIterator  = (double)iteratorBitsetTics / (double)numTests;
-	const double avgTimeRange  = (double)rangeBitsetTics / (double)numTests;
+	const double avgTimeForEach = (double)forEachBitsetTics / (double)numTests;
+	const double avgTimeIterator = (double)iteratorBitsetTics / (double)numTests;
+	const double avgTimeRange = (double)rangeBitsetTics / (double)numTests;
 
 	printf("\n\n");
 	printf("[Bitset]\n");
@@ -163,16 +185,17 @@ i32 main()
 	printf("Iterator: %f\n", avgTimeIterator);
 	printf("Range: %f\n", avgTimeRange);
 
-	const double avgTimeOrotodoxArray  = (double)ortodoxTics / (double)numTests;
-	const double avgTimeForEachArray  = (double)forEachArrayTics / (double)numTests;
-	const double avgTimeIteratorArray  = (double)iteratorArrayTics / (double)numTests;
-	const double avgTimeRangeArray  = (double)rangeArrayTics / (double)numTests;
+	const double avgTimeOrotodoxArray = (double)ortodoxTics / (double)numTests;
+	const double avgTimeForEachArray = (double)forEachArrayTics / (double)numTests;
+	const double avgTimeForEachFuncArray = (double)forEachFuncArrayTics / (double)numTests;
+	const double avgTimeIteratorArray = (double)iteratorArrayTics / (double)numTests;
+	const double avgTimeRangeArray = (double)rangeArrayTics / (double)numTests;
 
 	printf("\n");
 	printf("[Array]\n");
 	printf("Classic fori loop: %f\n", avgTimeOrotodoxArray);
 	printf("ForEach: %f\n", avgTimeForEachArray);
+	printf("ForEach[std::function]: %f\n", avgTimeForEachFuncArray);
 	printf("Iterator: %f\n", avgTimeIteratorArray);
 	printf("Range: %f\n", avgTimeRangeArray);
-
 }

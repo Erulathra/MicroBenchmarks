@@ -70,6 +70,12 @@ struct TStaticStack
 		--mSize;
 	}
 
+	void SetSize(u32 newSize)
+	{
+		CHECK(newSize <= capacity)
+		mSize = newSize;
+	}
+
 	void Empty() { mSize = 0; }
 
 	bool IsEmpty() { return mSize == 0; }
@@ -97,6 +103,14 @@ struct TStaticStack
 		for (u32 i = 0; i < mSize; ++i)
 		{
 			std::invoke(func, mData[i]);
+		}
+	}
+
+	void ForEachFunc(const std::function<void(T&)>& func)
+	{
+		for (u32 i = 0; i < mSize; ++i)
+		{
+			func(mData[i]);
 		}
 	}
 };
