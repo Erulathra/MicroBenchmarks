@@ -124,7 +124,7 @@ i32 main()
 			{
 				const u64 start = QueryPerfCounter();
 				randomNumbers.ForEach(
-					[&forEachSum](u32& data)
+					[&forEachSum](u32 data)
 					{
 						forEachSum += data;
 					}
@@ -138,7 +138,7 @@ i32 main()
 			{
 				const u64 start = QueryPerfCounter();
 				randomNumbers.ForEachFunc(
-					[&forEachFuncSum](u32& data)
+					[&forEachFuncSum](u32 data)
 					{
 						forEachFuncSum += data;
 					}
